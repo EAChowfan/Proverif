@@ -1,0 +1,193 @@
+free c: channel.
+free sp: channel [private].
+
+type exponent.
+type element.
+type label.
+type keyid.
+type key.
+type entid.
+type sskey.
+type spkey.
+
+
+free AppData1, AppData2, AppData3: bitstring [private].
+
+const CID_A, CID_B: entid.
+const lb_binder, lb_ce, lb_sf, lb_cf: label.
+const lb_derived: label.
+const lb_master: label.
+const g: element.
+const TLS13: bitstring.
+const extensions: bitstring.
+const EE: bitstring.
+const zero: key.
+const empty: bitstring.
+
+
+fun spk(sskey): spkey.
+fun sign(bitstring, sskey): bitstring.
+fun MAC(key, bitstring): bitstring.
+fun Hash(bitstring): bitstring.
+fun HKDF_Ext(key, bitstring): key.
+fun DSecret(key, label, bitstring): key.
+fun senc(bitstring, key): bitstring.
+fun exp(element, exponent): element.
+fun element_to_bitstring(element): bitstring [data, typeConverter].
+fun bitstring_to_element(bitstring): element [data, typeConverter].
+fun key_to_bitstring(key): bitstring [data, typeConverter].
+fun bitstring_to_key(bitstring): key [data, typeConverter].
+fun spkey_to_bitstring(spkey): bitstring [data, typeConverter].
+fun bitstring_to_spkey(bitstring): spkey [data, typeConverter].
+fun bitstring_to_keyid(bitstring): keyid [data, typeConverter].
+
+equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
+
+reduc forall m: bitstring, k: key; sdec(senc(m, k), k) = m.
+reduc forall m: bitstring, ssk: sskey; getmess(sign(m, ssk)) = m.
+reduc forall m: bitstring, ssk: sskey; checksign(sign(m, ssk), spk(ssk)) = m.
+
+
+
+event S12_STEP2(bitstring, bitstring).
+event E12_STEP2(bitstring, bitstring).
+event S13_STEP1(keyid, key, bitstring, bitstring, bitstring).
+event E13_STEP1(keyid, key, bitstring, bitstring, bitstring).
+event S13_STEP2(keyid, key, label, bitstring).
+event E13_STEP2(keyid, key, label, bitstring).
+event S13_STEP3(keyid, key, label, bitstring).
+event E13_STEP3(keyid, key, label, bitstring).
+event S_PCI(keyid, bitstring, bitstring, bitstring).
+event E_PCI(keyid, bitstring, bitstring, bitstring).
+event S_UKS(entid, keyid, bitstring, bitstring).
+event E_UKS(entid, keyid, bitstring, bitstring).
+
+
+
+query kid: keyid, psk: key, r: bitstring, b: bitstring, ch: bitstring;
+inj-event(E13_STEP1(kid, psk, r, b, ch))
+==> inj-event(S13_STEP1(kid, psk, r, b, ch)).
+query rs: bitstring, sh: bitstring;
+inj-event(E12_STEP2(rs, sh))
+==> inj-event(S12_STEP2(rs, sh)).
+query kid: keyid, k: key, lb: label, fin: bitstring;
+inj-event(E13_STEP2(kid, k, lb, fin))
+==> inj-event(S13_STEP2(kid, k, lb, fin)).
+query kid: keyid, k: key, lb: label, fin: bitstring;
+inj-event(E13_STEP3(kid, k, lb, fin))
+==> inj-event(S13_STEP3(kid, k, lb, fin)).
+query attacker(AppData1).
+query attacker(AppData2).
+query attacker(AppData3).
+
+
+query kid: keyid, rc: bitstring, rs: bitstring, fin: bitstring;
+inj-event(E_PCI(kid, rc, rs, fin))
+==> inj-event(S_PCI(kid, rc, rs, fin)).
+query cid: entid, kid: keyid, rc: bitstring, rs: bitstring;
+inj-event(E_UKS(cid, kid, rc, rs))
+==> inj-event(S_UKS(cid, kid, rc, rs)).
+
+
+
+let client(caPKey: spkey, claimedID: entid) =
+new rc: bitstring;
+new x: exponent;
+let X = exp(g, x) in
+let CH = (TLS13, rc, element_to_bitstring(X), extensions) in
+let sid = bitstring_to_keyid(Hash(CH)) in
+event S13_STEP1(sid, zero, rc, empty, CH);
+out(c, CH);
+in(c, (SH: bitstring, encHandshake: bitstring));
+let (=TLS13, rs: bitstring, Yb: bitstring, =extensions) = SH in
+let ES = HKDF_Ext(zero, key_to_bitstring(zero)) in
+let Z = exp(bitstring_to_element(Yb), x) in
+let HS = HKDF_Ext(DSecret(ES, lb_derived, empty), element_to_bitstring(Z)) in
+let TH = Hash((CH, SH)) in
+let kidS = bitstring_to_keyid(TH) in
+let (certS: bitstring, CV: bitstring, FinishedS: bitstring) = sdec(encHandshake, HS) in
+let pkS = bitstring_to_spkey(checksign(certS, caPKey)) in
+if checksign(CV, pkS) = TH then
+if FinishedS = MAC(HS, TH) then
+event E13_STEP2(kidS, HS, lb_sf, FinishedS);
+let MS13 = DSecret(HS, lb_master, empty) in
+let FinishedC = MAC(HS, TH) in
+event S13_STEP3(kidS, MS13, lb_cf, FinishedC);
+out(c, senc(FinishedC, HS));
+event E_UKS(claimedID, kidS, rc, rs);
+out(c, senc(AppData1, MS13));
+in(c, encData: bitstring);
+let m = sdec(encData, MS13) in
+0.
+
+
+
+let postCompromiseClient(caPKey: spkey, claimedID: entid) =
+new rc: bitstring;
+new x: exponent;
+let X = exp(g, x) in
+let CH = (TLS13, rc, element_to_bitstring(X), extensions) in
+out(c, CH);
+in(c, (SH: bitstring, encHandshake: bitstring));
+let (=TLS13, rs: bitstring, Yb: bitstring, =extensions) = SH in
+let ES = HKDF_Ext(zero, key_to_bitstring(zero)) in
+let Z = exp(bitstring_to_element(Yb), x) in
+let HS = HKDF_Ext(DSecret(ES, lb_derived, empty), element_to_bitstring(Z)) in
+let TH = Hash((CH, SH)) in
+let kidS = bitstring_to_keyid(TH) in
+let (certS: bitstring, CV: bitstring, FinishedS: bitstring) = sdec(encHandshake, HS) in
+let pkS = bitstring_to_spkey(checksign(certS, caPKey)) in
+if checksign(CV, pkS) = TH then
+if FinishedS = MAC(HS, TH) then
+let MS13 = DSecret(HS, lb_master, empty) in
+let FinishedC = MAC(HS, TH) in
+out(c, senc(FinishedC, HS));
+event E_PCI(kidS, rc, rs, FinishedS);
+out(c, senc(AppData1, MS13));
+0.
+
+
+
+let server(sskS: sskey, certS: bitstring, claimedID: entid) =
+in(c, CH: bitstring);
+let (=TLS13, rc: bitstring, Xb: bitstring, =extensions) = CH in
+let sidS = bitstring_to_keyid(Hash(CH)) in
+event E13_STEP1(sidS, zero, rc, empty, CH);
+new rs: bitstring;
+new y: exponent;
+let Y = exp(g, y) in
+let SH = (TLS13, rs, element_to_bitstring(Y), extensions) in
+let ES = HKDF_Ext(zero, key_to_bitstring(zero)) in
+let Z = exp(bitstring_to_element(Xb), y) in
+let HS = HKDF_Ext(DSecret(ES, lb_derived, empty), element_to_bitstring(Z)) in
+let TH = Hash((CH, SH)) in
+let kidS = bitstring_to_keyid(TH) in
+let CV = sign(TH, sskS) in
+let FinishedS = MAC(HS, TH) in
+event S13_STEP2(kidS, HS, lb_sf, FinishedS);
+event S_UKS(claimedID, kidS, rc, rs);
+out(c, (SH, senc((certS, CV, FinishedS), HS)));
+in(c, encFinC: bitstring);
+let FinishedC = sdec(encFinC, HS) in
+if FinishedC = MAC(HS, TH) then
+event E13_STEP3(kidS, DSecret(HS, lb_master, empty), lb_cf, FinishedC);
+let MS13 = DSecret(HS, lb_master, empty) in
+in(c, encData: bitstring);
+let m = sdec(encData, MS13) in
+if m = AppData1 then
+out(c, senc(AppData2, MS13));
+0.
+
+
+
+process
+new caSKey: sskey;
+new sskS: sskey;
+let caPKey = spk(caSKey) in
+let certS = sign(spkey_to_bitstring(spk(sskS)), caSKey) in
+out(c, caPKey);
+(
+    (!client(caPKey, CID_A)) | (!server(sskS, certS, CID_A)) |
+    (phase 1; out(c, sskS)) |
+    (phase 1; !postCompromiseClient(caPKey, CID_A))
+)

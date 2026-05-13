@@ -1,0 +1,168 @@
+free c: channel.
+free AppData1, AppData2, AppData3: bitstring [private].
+type sskey.
+type spkey.
+type exponent.
+type element.
+type key.
+fun spk(sskey): spkey.
+fun sign(bitstring, sskey): bitstring.
+fun PRF(bitstring, bitstring, bitstring): bitstring.
+fun Hash(bitstring): bitstring.
+fun senc(bitstring, key): bitstring.
+fun exp(element, exponent): element.
+fun element_to_bitstring(element): bitstring [data, typeConverter].
+fun bitstring_to_key(bitstring): key [data, typeConverter].
+fun key_to_bitstring(key): bitstring [data, typeConverter].
+fun spkey_to_bitstring(spkey): bitstring [data, typeConverter].
+fun bitstring_to_spkey(bitstring): spkey [data, typeConverter].
+
+const g: element.
+const TLS12: bitstring.
+const DHE_cipher: bitstring.
+const group_G: bitstring.
+const extensions: bitstring.
+const master_secret: bitstring.
+const client_finished: bitstring.
+const server_finished: bitstring.
+const ServerHelloDone: bitstring.
+const CCS: bitstring.
+
+equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
+
+reduc forall m: bitstring, k: key; sdec(senc(m, k), k) = m.
+reduc forall m: bitstring, ssk: sskey; getmess(sign(m, ssk)) = m.
+reduc forall m: bitstring, ssk: sskey; checksign(sign(m, ssk), spk(ssk)) = m.
+
+event S12_STEP1(bitstring, bitstring).
+event E12_STEP1(bitstring, bitstring).
+event S12_STEP2(bitstring, bitstring).
+event E12_STEP2(bitstring, bitstring).
+event S12_STEP3(element, bitstring).
+event E12_STEP3(element, bitstring).
+event S12_STEP4(key, bitstring).
+event E12_STEP4(key, bitstring).
+event S_PCI(key, bitstring, bitstring, bitstring).
+event E_PCI(key, bitstring, bitstring, bitstring).
+
+
+query rc: bitstring, CH: bitstring;
+inj-event(E12_STEP1(rc, CH))
+==> inj-event(S12_STEP1(rc, CH)).
+query rs: bitstring, SH: bitstring;
+inj-event(E12_STEP2(rs, SH))
+==> inj-event(S12_STEP2(rs, SH)).
+query mss: key, Finisheds: bitstring;
+inj-event(E12_STEP4(mss, Finisheds))
+==> inj-event(S12_STEP4(mss, Finisheds)).
+query attacker(AppData1) phase 0.
+query attacker(AppData1) phase 1.
+query attacker(AppData2) phase 1.
+query msc: element, Finishedc: bitstring;
+inj-event(E12_STEP3(msc, Finishedc))
+==> inj-event(S12_STEP3(msc, Finishedc)).
+query msp: key, rcp: bitstring, rsp: bitstring, finp: bitstring;
+inj-event(E_PCI(msp, rcp, rsp, finp))
+==> inj-event(S_PCI(msp, rcp, rsp, finp)).
+
+
+
+let client(caPKey: spkey) =
+new rc: bitstring;
+let CH = (TLS12, rc, DHE_cipher) in
+event S12_STEP1(rc, CH);
+out(c, CH);
+in(c, (SH: bitstring, certS: bitstring, SKE: bitstring, =ServerHelloDone));
+let (=TLS12, rs: bitstring, =DHE_cipher, =group_G) = SH in
+event E12_STEP2(rs, SH);
+let pkS = bitstring_to_spkey(checksign(certS, caPKey)) in
+let (=group_G, =g, Y: element, sigS: bitstring) = SKE in
+let (=group_G, =g, =Y, =rc, =rs) = checksign(sigS, pkS) in
+new x: exponent;
+let X = exp(g, x) in
+let Z = exp(Y, x) in
+let PMS = element_to_bitstring(Z) in
+let MS12 = bitstring_to_key(PRF(PMS, master_secret, (rc, rs))) in
+let CKE = X in
+let TH = Hash((CH, SH, SKE, element_to_bitstring(CKE))) in
+let FinishedC = PRF(key_to_bitstring(MS12), client_finished, TH) in
+event S12_STEP3(X, FinishedC);
+out(c, (CKE, CCS, FinishedC));
+in(c, (=CCS, FinishedS: bitstring));
+if FinishedS = PRF(key_to_bitstring(MS12), server_finished, TH) then
+event E12_STEP4(MS12, FinishedS);
+out(c, senc(AppData1, MS12));
+in(c, encData: bitstring);
+let m = sdec(encData, MS12) in
+0.
+
+
+
+let postCompromiseClient(caPKey: spkey) =
+new rc: bitstring;
+let CH = (TLS12, rc, DHE_cipher) in
+out(c, CH);
+in(c, (SH: bitstring, certS: bitstring, SKE: bitstring, =ServerHelloDone));
+let (=TLS12, rs: bitstring, =DHE_cipher, =group_G) = SH in
+let pkS = bitstring_to_spkey(checksign(certS, caPKey)) in
+let (=group_G, =g, Y: element, sigS: bitstring) = SKE in
+let (=group_G, =g, =Y, =rc, =rs) = checksign(sigS, pkS) in
+new x: exponent;
+let X = exp(g, x) in
+let Z = exp(Y, x) in
+let PMS = element_to_bitstring(Z) in
+let MS12 = bitstring_to_key(PRF(PMS, master_secret, (rc, rs))) in
+let CKE = X in
+let TH = Hash((CH, SH, SKE, element_to_bitstring(CKE))) in
+let FinishedC = PRF(key_to_bitstring(MS12), client_finished, TH) in
+out(c, (CKE, CCS, FinishedC));
+in(c, (=CCS, FinishedS: bitstring));
+if FinishedS = PRF(key_to_bitstring(MS12), server_finished, TH) then
+event E_PCI(MS12, rc, rs, FinishedS);
+out(c, senc(AppData3, MS12));
+0.
+
+
+
+let server(sskS: sskey, certS: bitstring) =
+in(c, CH: bitstring);
+let (=TLS12, rc: bitstring, =DHE_cipher) = CH in
+event E12_STEP1(rc, CH);
+new rs: bitstring;
+let SH = (TLS12, rs, DHE_cipher, group_G) in
+event S12_STEP2(rs, SH);
+new y: exponent;
+let Y = exp(g, y) in
+let sigS = sign((group_G, g, Y, rc, rs), sskS) in
+let SKE = (group_G, g, Y, sigS) in
+out(c, (SH, certS, SKE, ServerHelloDone));
+in(c, (CKE: element, =CCS, FinishedC: bitstring));
+let X = CKE in
+let Z = exp(X, y) in
+let PMS = element_to_bitstring(Z) in
+let MS12 = bitstring_to_key(PRF(PMS, master_secret, (rc, rs))) in
+let TH = Hash((CH, SH, SKE, element_to_bitstring(CKE))) in
+if FinishedC = PRF(key_to_bitstring(MS12), client_finished, TH) then
+event E12_STEP3(X, FinishedC);
+let FinishedS = PRF(key_to_bitstring(MS12), server_finished, TH) in
+event S12_STEP4(MS12, FinishedS);
+out(c, (CCS, FinishedS));
+in(c, encData: bitstring);
+let m = sdec(encData, MS12) in
+if m = AppData1 then
+out(c, senc(AppData2, MS12));
+0.
+
+
+
+process
+new caSKey: sskey;
+new sskS: sskey;
+let caPKey = spk(caSKey) in
+let certS = sign(spkey_to_bitstring(spk(sskS)), caSKey) in
+out(c, caPKey);
+(
+    (!client(caPKey)) | (!server(sskS, certS)) |
+    (phase 1; out(c, sskS)) |
+    (phase 1; !postCompromiseClient(caPKey))
+)

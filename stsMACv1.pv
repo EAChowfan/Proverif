@@ -1,0 +1,86 @@
+set reconstructTrace = true.
+type key.
+fun senc(bitstring, key): bitstring.
+reduc forall m: bitstring, k: key; sdec(senc(m,k),k) = m.
+
+(* Diffie-Hellman *)
+type G.
+type exponent.
+
+const g: G.
+fun exp(G, exponent): G.
+equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
+
+(* Mac & Hash *)
+fun hmac(key, bitstring): bitstring.
+fun b2k(bitstring): key [data, typeConverter].
+fun g2b(G): bitstring [data, typeConverter].
+fun b2g(bitstring): G [data, typeConverter].
+fun g2k(G): key [data, typeConverter].
+fun hash(bitstring): bitstring.
+
+(* Digital signatures *)
+type sskey.
+type spkey.
+
+fun spk(sskey): spkey.
+fun sign(bitstring, sskey): bitstring.
+
+reduc forall m: bitstring, ssk: sskey; getmess(sign(m,ssk)) = m.
+reduc forall m: bitstring, ssk: sskey; checksign(sign(m,ssk),spk(ssk)) = m.
+
+free c: channel.
+free a_val: bitstring [private].
+free b_val: bitstring [private].
+
+(* Authentication queries *)
+event S_Auth_A_to_B(G, spkey).
+event E_Auth_A_to_B(G, spkey).
+event S_Auth_B_to_A(G, spkey).
+event E_Auth_B_to_A(G, spkey).
+
+query dhpKey: G, pKey: spkey; inj-event(E_Auth_A_to_B(dhpKey, pKey)) ==> inj-event(S_Auth_A_to_B(dhpKey, pKey)).
+query dhpKey: G, pKey: spkey; inj-event(E_Auth_B_to_A(dhpKey, pKey)) ==> inj-event(S_Auth_B_to_A(dhpKey, pKey)).
+
+query attacker(a_val).
+query attacker(b_val).
+
+
+let proc_A(skA: sskey, pkB: spkey) =
+new x: exponent;
+let gX = exp(g, x) in
+event S_Auth_A_to_B(gX, pkB);
+out(c, gX);
+in(c, (gY2: G, sig1: bitstring, mac1: bitstring));
+let (gYgX1: bitstring, gYgX2: bitstring) = checksign(sig1, pkB) in
+if b2g(gYgX1) = gY2 && b2g(gYgX2) = gX then
+let gXY2 = exp(gY2, x) in 
+if mac1 = hmac(g2k(gXY2), (g2b(gY2), g2b(gX))) then
+out(c, (sign((g2b(gX), g2b(gY2)), skA), 
+hmac(g2k(gXY2), (g2b(gX), g2b(gY2)))));
+event E_Auth_B_to_A(gY2, spk(skA));
+out(c, senc(a_val, g2k(gXY2))). 
+
+let proc_B(skB: sskey, pkA: spkey) =
+in(c, gX2: G);
+new y: exponent;
+let gY = exp(g, y) in
+let gXY = exp(gX2, y) in
+event S_Auth_B_to_A(gY, pkA);
+out(c, (gY, sign((g2b(gY), g2b(gX2)),skB), 
+hmac(g2k(gXY), (g2b(gY), g2b(gX2)))));
+in(c, (sig2: bitstring, mac2: bitstring));
+let (gXgY1: bitstring, gXgY2: bitstring) = checksign(sig2, pkA) in
+if b2g(gXgY1) = gX2 && b2g(gXgY2) = gY then
+if mac2 = hmac(g2k(gXY),(g2b(gX2), g2b(gY))) then	
+event E_Auth_A_to_B(gX2, spk(skB));
+out(c, senc(b_val, g2k(gXY))).
+
+process 
+
+new skA: sskey; let pkA = spk(skA) in out(c, pkA); 
+new skB: sskey; let pkB = spk(skB) in out(c, pkB); 
+(
+	(!proc_A(skA, pkB)) | 
+	(!proc_B(skB, pkA)) 
+)

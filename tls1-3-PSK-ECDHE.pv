@@ -1,0 +1,178 @@
+free c: channel.
+free sp: channel [private].
+
+type label.
+type keyid.
+type key.
+type entid.
+type exponent.
+type element.
+
+free AppData1, AppData2, AppData3: bitstring [private].
+free PSK: key [private].
+
+const CID_A, CID_B: entid.
+const psk_identity: bitstring.
+const lb_ce, lb_sf, lb_cf: label.
+const lb_derived: label.
+const res_binder: label.
+const TLS13: bitstring.
+const pre_shared_key: bitstring.
+const psk_ke_ecdhe: bitstring.
+const empty: bitstring.
+const zero: key.
+const g: element.
+
+
+
+fun MAC(key, bitstring): bitstring.
+fun HMAC(key, bitstring): bitstring.
+fun Hash(bitstring): bitstring.
+fun HKDF_Ext(key, bitstring): key.
+fun DSecret(key, label, bitstring): key.
+fun senc(bitstring, key): bitstring.
+fun key_to_bitstring(key): bitstring [data, typeConverter].
+fun bitstring_to_keyid(bitstring): keyid [data, typeConverter].
+fun exp(element, exponent): element.
+fun element_to_bitstring(element): bitstring [data, typeConverter].
+fun bitstring_to_element(bitstring): element [data, typeConverter].
+
+reduc forall m: bitstring, k: key; sdec(senc(m, k), k) = m.
+equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
+
+event S12_STEP2(bitstring, bitstring).
+event E12_STEP2(bitstring, bitstring).
+event S13_STEP1(keyid, key, bitstring, bitstring, bitstring).
+event E13_STEP1(keyid, key, bitstring, bitstring, bitstring).
+event S13_STEP2(keyid, key, label, bitstring).
+event E13_STEP2(keyid, key, label, bitstring).
+event S13_STEP3(keyid, key, label, bitstring).
+event E13_STEP3(keyid, key, label, bitstring).
+event S_PCI(keyid, bitstring, bitstring, bitstring).
+event E_PCI(keyid, bitstring, bitstring, bitstring).
+event S_UKS(entid, keyid, bitstring, bitstring).
+event E_UKS(entid, keyid, bitstring, bitstring).
+
+
+
+query kid: keyid, psk: key, r: bitstring, b: bitstring, ch: bitstring;
+inj-event(E13_STEP1(kid, psk, r, b, ch))
+==> inj-event(S13_STEP1(kid, psk, r, b, ch)).
+query rs: bitstring, sh: bitstring;
+inj-event(E12_STEP2(rs, sh))
+==> inj-event(S12_STEP2(rs, sh)).
+query kid: keyid, k: key, lb: label, fin: bitstring;
+inj-event(E13_STEP2(kid, k, lb, fin))
+==> inj-event(S13_STEP2(kid, k, lb, fin)).
+query kid: keyid, k: key, lb: label, fin: bitstring;
+inj-event(E13_STEP3(kid, k, lb, fin))
+==> inj-event(S13_STEP3(kid, k, lb, fin)).
+query attacker(AppData1).
+query attacker(AppData2).
+query attacker(AppData3).
+query kid: keyid, rc: bitstring, rs: bitstring, fin: bitstring;
+inj-event(E_PCI(kid, rc, rs, fin))
+==> inj-event(S_PCI(kid, rc, rs, fin)).
+query cid: entid, kid: keyid, rc: bitstring, rs: bitstring;
+inj-event(E_UKS(cid, kid, rc, rs))
+==> inj-event(S_UKS(cid, kid, rc, rs)).
+
+
+
+let client(claimedID: entid) =
+new rc: bitstring;
+new x: exponent;
+let X = exp(g, x) in
+let CH = (TLS13, rc,X, pre_shared_key, psk_ke_ecdhe) in
+let ES = HKDF_Ext(zero, key_to_bitstring(PSK)) in
+let binder_key = DSecret(ES, res_binder, empty) in
+let b = HMAC(binder_key, Hash(CH)) in
+let sid = bitstring_to_keyid(Hash(CH)) in
+event S13_STEP1(sid, PSK, rc, b, CH);
+out(c, (CH, b));
+in(c, (SH: bitstring, FinishedS: bitstring));
+let (=TLS13, rs: bitstring,Y:element, =pre_shared_key, =psk_ke_ecdhe) = SH in
+let Z = exp(Y, x) in
+let HS = HKDF_Ext(DSecret(ES, lb_derived, empty), element_to_bitstring(Z)) in
+let TH = Hash((CH, SH)) in
+let kidS = bitstring_to_keyid(TH) in
+if FinishedS = MAC(HS, TH) then
+event E13_STEP2(kidS, HS, lb_sf, FinishedS);
+let MS13 = DSecret(HS, lb_derived, empty) in
+let FinishedC = MAC(HS, TH) in
+event S13_STEP3(kidS, MS13, lb_cf, FinishedC);
+event E_UKS(claimedID, kidS, rc, rs);
+out(c, FinishedC);
+out(c, senc(AppData1, MS13));
+in(c, encData: bitstring);
+let m = sdec(encData, MS13) in
+0.
+
+
+
+let postCompromiseClient(claimedID: entid) =
+new rc: bitstring;
+new x: exponent;
+let X = exp(g, x) in
+let CH = (TLS13, rc,X, pre_shared_key, psk_ke_ecdhe) in
+let ES = HKDF_Ext(zero, key_to_bitstring(PSK)) in
+let binder_key = DSecret(ES, res_binder, empty) in
+let b = HMAC(binder_key, Hash(CH)) in
+let sid = bitstring_to_keyid(Hash(CH)) in
+out(c, (CH, b));
+in(c, (SH: bitstring, FinishedS: bitstring));
+let (=TLS13, rs: bitstring,Y:element, =pre_shared_key, =psk_ke_ecdhe) = SH in
+let Z = exp(Y, x) in
+let HS = HKDF_Ext(DSecret(ES, lb_derived, empty), element_to_bitstring(Z)) in
+let TH = Hash((CH, SH)) in
+let kidS = bitstring_to_keyid(TH) in
+if FinishedS = MAC(HS, TH) then
+let MS13 = DSecret(HS, lb_derived, empty) in
+let FinishedC = MAC(HS, TH) in
+event E_PCI( kidS, rc, rs, FinishedS);
+out(c, FinishedC);
+out(c, senc(AppData1, MS13));
+in(c, encData: bitstring);
+let m = sdec(encData, MS13) in
+0.
+
+
+
+let server(claimedID: entid) =
+in(c, (CH: bitstring, b: bitstring));
+let (=TLS13, rc: bitstring,X: element, =pre_shared_key, =psk_ke_ecdhe) = CH in
+let sidS = bitstring_to_keyid(Hash(CH)) in
+event E13_STEP1(sidS, PSK, rc, b, CH);
+let ES = HKDF_Ext(zero, key_to_bitstring(PSK)) in
+let binder_key = DSecret(ES, res_binder, empty) in
+if b = HMAC(binder_key, Hash(CH)) then
+new rs: bitstring;
+new y: exponent;
+let Y = exp(g, y) in
+let Z = exp(X, y) in 
+let SH = (TLS13, rs,Y, pre_shared_key, psk_ke_ecdhe) in
+let HS = HKDF_Ext(DSecret(ES, lb_derived, empty),element_to_bitstring(Z)) in
+let TH = Hash((CH, SH)) in
+let kidS = bitstring_to_keyid(TH) in
+let FinishedS = MAC(HS, TH) in
+event S13_STEP2(kidS, HS, lb_sf, FinishedS);
+event S_UKS(claimedID, kidS, rc, rs);
+out(c, (SH, FinishedS));
+in(c, FinishedC: bitstring);
+if FinishedC = MAC(HS, TH) then
+event E13_STEP3(kidS, DSecret(HS, lb_derived, empty), lb_cf, FinishedC);
+let MS13 = DSecret(HS, lb_derived, empty) in
+in(c, encData: bitstring);
+let m = sdec(encData, MS13) in
+if m = AppData1 then
+out(c, senc(AppData2, MS13));
+0.
+
+
+
+process
+(
+    (!client(CID_A)) | (!server(CID_A)) |
+    (phase 1; out(c, PSK)) |
+    (phase 1; !postCompromiseClient(CID_A))
+)
