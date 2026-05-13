@@ -40,8 +40,8 @@ fun bitstring_to_element(bitstring): element [data, typeConverter].
 reduc forall m: bitstring, k: key; sdec(senc(m, k), k) = m.
 equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
 
-event S12_STEP2(bitstring, bitstring).
-event E12_STEP2(bitstring, bitstring).
+event S12_STEP1(bitstring, bitstring).
+event E12_STEP1(bitstring, bitstring).
 event S13_STEP1(keyid, key, bitstring, bitstring, bitstring).
 event E13_STEP1(keyid, key, bitstring, bitstring, bitstring).
 event S13_STEP2(keyid, key, label, bitstring).
@@ -59,8 +59,8 @@ query kid: keyid, psk: key, r: bitstring, b: bitstring, ch: bitstring;
 inj-event(E13_STEP1(kid, psk, r, b, ch))
 ==> inj-event(S13_STEP1(kid, psk, r, b, ch)).
 query rs: bitstring, sh: bitstring;
-inj-event(E12_STEP2(rs, sh))
-==> inj-event(S12_STEP2(rs, sh)).
+inj-event(E12_STEP1(rs, sh))
+==> inj-event(S12_STEP1(rs, sh)).
 query kid: keyid, k: key, lb: label, fin: bitstring;
 inj-event(E13_STEP2(kid, k, lb, fin))
 ==> inj-event(S13_STEP2(kid, k, lb, fin)).
@@ -131,7 +131,7 @@ let MS13 = DSecret(HS, lb_derived, empty) in
 let FinishedC = MAC(HS, TH) in
 event E_PCI( kidS, rc, rs, FinishedS);
 out(c, FinishedC);
-out(c, senc(AppData1, MS13));
+out(c, senc(AppData3, MS13));
 in(c, encData: bitstring);
 let m = sdec(encData, MS13) in
 0.

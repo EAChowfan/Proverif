@@ -52,16 +52,15 @@ inj-event(E12_STEP2(rs, SH))
 query mss: key, Finisheds: bitstring;
 inj-event(E12_STEP4(mss, Finisheds))
 ==> inj-event(S12_STEP4(mss, Finisheds)).
-query attacker(AppData1) phase 0.
-query attacker(AppData1) phase 1.
-query attacker(AppData2) phase 1.
 query msc: bitstring, Finishedc: bitstring;
 inj-event(E12_STEP3(msc, Finishedc))
 ==> inj-event(S12_STEP3(msc, Finishedc)).
 query msp: key, rcp: bitstring, rsp: bitstring, finp: bitstring;
 inj-event(E_PCI(msp, rcp, rsp, finp))
 ==> inj-event(S_PCI(msp, rcp, rsp, finp)).
-
+query attacker(AppData1) phase 0.
+query attacker(AppData1) phase 1.
+query attacker(AppData2) phase 1.
 
 
 let client(caPKey: spkey) =
