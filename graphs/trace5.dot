@@ -10,7 +10,7 @@ P__0 [label = "Attacker", shape = plaintext]
 Trace -> P0__0 [label = "", style = invisible, weight = 100]{rank = same; P0__0 P__0}
 P0__0 -> P0__1 [label = <>, weight = 100]
 P0__1 -> P0__2 [label = <>, weight = 100]
-P0__2 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{1}</FONT><FONT COLOR="blue">new </FONT>caSKey_1</TD></TR><TR><TD><FONT COLOR="darkgreen">{2}</FONT><FONT COLOR="blue">new </FONT>sskS_2</TD></TR></TABLE>>]
+P0__2 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{1}</FONT><FONT COLOR="blue">new </FONT>caSKey_1</TD></TR><TR><TD><FONT COLOR="darkgreen">{2}</FONT><FONT COLOR="blue">new </FONT>skS_2</TD></TR></TABLE>>]
 P0__2 -> P0__3 [label = <>, weight = 100]
 P0__3 -> P0__4 [label = <>, weight = 100]
 P__0 -> P__1 [label = <>, weight = 100]
@@ -44,15 +44,16 @@ P__3 -> P__4 [label = <>, weight = 100]
 P0_2_0__9 -> P0_2_0__10 [label = <>, weight = 100]
 P__4 -> P__5 [label = <>, weight = 100]
 {rank = same; P__5 P0_2_0__10}
-P0_2_0__10 -> P__5 [label = <(TLS12,a,DHE_cipher)>, dir = back, arrowhead = normal]
+P0_2_0__10 -> P__5 [label = <(TLS12,a,RSA_cipher,extensions)>, dir = back, arrowhead = normal]
 P0_2_0__10 -> P0_2_0__11 [label = <>, weight = 100]
 P0_1__7 -> P0_1__8 [label = <>, weight = 100]
 P0_0__7 -> P0_0__8 [label = <>, weight = 100]
 P__5 -> P__6 [label = <>, weight = 100]
 {rank = same; P__6 P0_0__8 P0_1__8 P0_2_0__11}
 P0_2_0__11 -> P0_2_0__12 [label = <>, weight = 100]
-P0_2_0__12 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{37}</FONT><FONT COLOR="blue">event</FONT> E12_STEP1(a,(TLS12,a,DHE_cipher))</TD></TR><TR><TD><FONT COLOR="darkgreen">{38}</FONT><FONT COLOR="blue">new </FONT>rs_4</TD></TR><TR><TD><FONT COLOR="darkgreen">{40}</FONT><FONT COLOR="blue">event</FONT> S12_STEP2(rs_4,(TLS12,rs_4,DHE_cipher,<br/>
-group_G))</TD></TR><TR><TD><FONT COLOR="darkgreen">{41}</FONT><FONT COLOR="blue">new </FONT>y_3</TD></TR></TABLE>>]
+P0_2_0__12 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{32}</FONT><FONT COLOR="blue">event</FONT> E12_STEP1(a,(TLS12,a,RSA_cipher,extensions))<br/>
+</TD></TR><TR><TD><FONT COLOR="darkgreen">{33}</FONT><FONT COLOR="blue">new </FONT>rs_5</TD></TR><TR><TD><FONT COLOR="darkgreen">{35}</FONT><FONT COLOR="blue">event</FONT> S12_STEP2(rs_5,(TLS12,rs_5,RSA_cipher,<br/>
+extensions))</TD></TR></TABLE>>]
 P0_2_0__12 -> P0_2_0__13 [label = <>, weight = 100]
 P0_2_0__13 -> P0_2_0__14 [label = <>, weight = 100]
 P0_1__8 -> P0_1__9 [label = <>, weight = 100]
@@ -62,8 +63,9 @@ P__6 -> P__7 [label = <>, weight = 100]
 P0_2_0__14 -> P0_2_0__15 [label = <>, weight = 100]
 P__7 -> P__8 [label = <>, weight = 100]
 {rank = same; P__8 P0_2_0__15}
-P0_2_0__15 -> P__8 [label = <((~M_1,~M_2,~M_3,~M_4),~M_5,(~M_6,~M_7,~M_8,~M_9),<br/>
-~M_10)>, arrowhead = normal]
+P0_2_0__15 -> P__8 [label = <((~M_1,~M_2,~M_3,~M_4),~M_5,~M_6) = ((TLS12,rs_5,<br/>
+RSA_cipher,extensions),sign(pk(skS_2),caSKey_1),<br/>
+ServerHelloDone)>, arrowhead = normal]
 P0_2_0__15 -> P0_2_0__16 [label = <>, weight = 100]
 P0_1__9 -> P0_1__10 [label = <>, weight = 100]
 P0_0__9 -> P0_0__10 [label = <>, weight = 100]
@@ -88,7 +90,7 @@ P0_1_0__12 [label = "", fixedsize = false, width = 0, height = 0, shape = none]
 P0_1__12 -> P0_1_0__12 [label = <>, weight = 100]
 P0_1_0__12 -> P0_1_0__13 [label = <>, weight = 100]
 P0_1_0__13 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD>Beginning of process <FONT COLOR="darkgreen">postCompromiseClient</FONT>(spk(<br/>
-caSKey_1))</TD></TR><TR><TD><FONT COLOR="darkgreen">{65}</FONT><FONT COLOR="blue">new </FONT>rc_5</TD></TR></TABLE>>]
+caSKey_1))</TD></TR><TR><TD><FONT COLOR="darkgreen">{54}</FONT><FONT COLOR="blue">new </FONT>rc_5</TD></TR></TABLE>>]
 P0_1_0__13 -> P0_1_0__14 [label = <>, weight = 100]
 P0_1_0__14 -> P0_1_0__15 [label = <>, weight = 100]
 P0_0__12 -> P0_0__13 [label = <>, weight = 100]
@@ -97,7 +99,8 @@ P__12 -> P__13 [label = <>, weight = 100]
 P0_1_0__15 -> P0_1_0__16 [label = <>, weight = 100]
 P__13 -> P__14 [label = <>, weight = 100]
 {rank = same; P__14 P0_1_0__16}
-P0_1_0__16 -> P__14 [label = <(~M_11,~M_12,~M_13) = (TLS12,rc_5,DHE_cipher)>, arrowhead = normal]
+P0_1_0__16 -> P__14 [label = <(~M_7,~M_8,~M_9,~M_10) = (TLS12,rc_5,RSA_cipher,<br/>
+extensions)>, arrowhead = normal]
 P0_1_0__16 -> P0_1_0__17 [label = <>, weight = 100]
 P0_0__13 -> P0_0__14 [label = <>, weight = 100]
 P__14 -> P__15 [label = <>, weight = 100]
@@ -110,7 +113,7 @@ P__15 -> P__16 [label = <>, weight = 100]
 P0_2_0__20 -> P0_2_0__21 [label = <>, weight = 100]
 P__16 -> P__17 [label = <>, weight = 100]
 {rank = same; P__17 P0_2_0__21}
-P0_2_0__21 -> P__17 [label = <~M_14 = sskS_2>, arrowhead = normal]
+P0_2_0__21 -> P__17 [label = <~M_11 = skS_2>, arrowhead = normal]
 P0_2_0__21 -> P0_2_0__22 [label = <>, weight = 100]
 P0_1_0__18 -> P0_1_0__19 [label = <>, weight = 100]
 P0_0__15 -> P0_0__16 [label = <>, weight = 100]
@@ -131,7 +134,7 @@ P0_0__17 -> P0_0__18 [label = <>, weight = 100]
 P__20 -> P__21 [label = <>, weight = 100]
 {rank = same; P__21 P0_0__18 P0_1_0__22}
 P0_1_0__22 -> P0_1_0__23 [label = <>, weight = 100]
-P0_1_0__23 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{73}</FONT><FONT COLOR="blue">new </FONT>x_3</TD></TR></TABLE>>]
+P0_1_0__23 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{60}</FONT><FONT COLOR="blue">new </FONT>PMS_4</TD></TR></TABLE>>]
 P0_1_0__23 -> P0_1_0__24 [label = <>, weight = 100]
 P0_1_0__24 -> P0_1_0__25 [label = <>, weight = 100]
 P0_0__18 -> P0_0__19 [label = <>, weight = 100]
@@ -140,7 +143,7 @@ P__21 -> P__22 [label = <>, weight = 100]
 P0_1_0__25 -> P0_1_0__26 [label = <>, weight = 100]
 P__22 -> P__23 [label = <>, weight = 100]
 {rank = same; P__23 P0_1_0__26}
-P0_1_0__26 -> P__23 [label = <(~M_15,~M_16,~M_17)>, arrowhead = normal]
+P0_1_0__26 -> P__23 [label = <(~M_12,~M_13,~M_14)>, arrowhead = normal]
 P0_1_0__26 -> P0_1_0__27 [label = <>, weight = 100]
 P0_0__19 -> P0_0__20 [label = <>, weight = 100]
 P__23 -> P__24 [label = <>, weight = 100]
@@ -158,30 +161,44 @@ P0_0__21 -> P0_0__22 [label = <>, weight = 100]
 P__26 -> P__27 [label = <>, weight = 100]
 {rank = same; P__27 P0_0__22 P0_1_0__30}
 P0_1_0__30 -> P0_1_0__31 [label = <>, weight = 100]
-P0_1_0__31 [color = red, shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{84}</FONT><FONT COLOR="blue">event</FONT> E_PCI(PRF(exp(exp(g,a_4),x_3),master_secret,<br/>
-(rc_5,a_3)),rc_5,a_3,PRF(PRF(exp(exp(g,a_4),x_3),<br/>
-master_secret,(rc_5,a_3)),server_finished,Hash(<br/>
-((TLS12,rc_5,DHE_cipher),(TLS12,a_3,DHE_cipher,<br/>
-group_G),(group_G,g,exp(g,a_4),sign((group_G,g,<br/>
-exp(g,a_4),rc_5,a_3),sskS_2)),exp(g,x_3)))))</TD></TR></TABLE>>]
+P0_1_0__31 [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD><FONT COLOR="darkgreen">{68}</FONT><FONT COLOR="blue">event</FONT> E_PCI(PRF(PMS_4,master_secret,(rc_5,<br/>
+a_3)),rc_5,a_3,PRF(PRF(PMS_4,master_secret,(rc_5,<br/>
+a_3)),server_finished,Hash(((TLS12,rc_5,RSA_cipher,<br/>
+extensions),(TLS12,a_3,RSA_cipher,extensions),<br/>
+sign(pk(skS_2),caSKey_1),RSAenc(PMS_4,pk(skS_2))))))<br/>
+</TD></TR></TABLE>>]
 P0_1_0__31 -> P0_1_0__32 [label = <>, weight = 100]
-Abbrev [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"><TR> <TD> Abbreviations </TD></TR><TR><TD>~M_1 = TLS12</TD></TR><TR><TD>~M_2 = rs_4</TD></TR><TR><TD>~M_3 = DHE_cipher</TD></TR><TR><TD>~M_4 = group_G</TD></TR><TR><TD>~M_5 = sign(spk(sskS_2),caSKey_1)</TD></TR><TR><TD>~M_6 = group_G</TD></TR><TR><TD>~M_7 = g</TD></TR><TR><TD>~M_8 = exp(g,y_3)</TD></TR><TR><TD>~M_9 = sign((group_G,g,exp(g,y_3),a,rs_4),sskS_2)</TD></TR><TR><TD>~M_10 = ServerHelloDone</TD></TR><TR><TD>~X_1 = ((TLS12,a_3,DHE_cipher,group_G),~M_5,(group_G,<br/>
-g,exp(g,a_4),sign((~M_4,g,exp(g,a_4),~M_12,a_3),<br/>
-~M_14)),ServerHelloDone)<br/>
-= ((TLS12,a_3,DHE_cipher,<br/>
-group_G),sign(spk(sskS_2),caSKey_1),(group_G,g,<br/>
-exp(g,a_4),sign((group_G,g,exp(g,a_4),rc_5,a_3),<br/>
-sskS_2)),ServerHelloDone)</TD></TR><TR><TD>~M_15 = exp(g,x_3)</TD></TR><TR><TD>~M_16 = CCS</TD></TR><TR><TD>~M_17 = PRF(PRF(exp(exp(g,a_4),x_3),master_secret,<br/>
-(rc_5,a_3)),client_finished,Hash(((TLS12,rc_5,<br/>
-DHE_cipher),(TLS12,a_3,DHE_cipher,group_G),(group_G,<br/>
-g,exp(g,a_4),sign((group_G,g,exp(g,a_4),rc_5,a_3),<br/>
-sskS_2)),exp(g,x_3))))</TD></TR><TR><TD>~X_2 = (CCS,PRF(PRF(exp(~M_15,a_4),master_secret,(~M_12,<br/>
-a_3)),server_finished,Hash(((TLS12,~M_12,DHE_cipher),<br/>
-(TLS12,a_3,DHE_cipher,group_G),(group_G,g,exp(<br/>
-g,a_4),sign((~M_4,g,exp(g,a_4),~M_12,a_3),~M_14)),<br/>
-~M_15))))<br/>
-= (CCS,PRF(PRF(exp(exp(g,a_4),x_3),master_secret,<br/>
+P0_1_0__32 -> P0_1_0__33 [label = <>, weight = 100]
+P0_0__22 -> P0_0__23 [label = <>, weight = 100]
+P__27 -> P__28 [label = <>, weight = 100]
+{rank = same; P__28 P0_0__23 P0_1_0__33}
+P0_1_0__33 -> P0_1_0__34 [label = <>, weight = 100]
+P__28 -> P__29 [label = <>, weight = 100]
+{rank = same; P__29 P0_1_0__34}
+P0_1_0__34 -> P__29 [label = <~M_15 = senc(AppData1,PRF(PMS_4,master_secret,<br/>
+(rc_5,a_3)))>, arrowhead = normal]
+P0_1_0__34 -> P0_1_0__35 [label = <>, weight = 100]
+P0_0__23 -> P0_0__24 [label = <>, weight = 100]
+P__29 -> P__30 [label = <>, weight = 100]
+{rank = same; P__30 P0_0__24 P0_1_0__35}
+P0_1_0__36 [label = "", width = 0.3, height = 0.3]
+P0_1_0__35 -> P0_1_0__36 [label = <>, weight = 100]
+P__30 -> P__31 [label = <>, weight = 100]
+P__31 [color = red, shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"> <TR><TD>The attacker has the message sdec(~M_15,PRF(RSADec(<br/>
+~M_12,~M_11),master_secret,(~M_8,a_3))) = AppData1<br/>
+in phase 1</TD></TR></TABLE>>]
+P__31 -> P__32 [label = <>, weight = 100]
+Abbrev [shape = plaintext, label = <<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"><TR> <TD> Abbreviations </TD></TR><TR><TD>~X_1 = ((TLS12,a_3,RSA_cipher,extensions),~M_5,ServerHelloDone)<br/>
+=<br/>
+((TLS12,a_3,RSA_cipher,extensions),sign(pk(skS_2),<br/>
+caSKey_1),ServerHelloDone)</TD></TR><TR><TD>~M_12 = RSAenc(PMS_4,pk(skS_2))</TD></TR><TR><TD>~M_13 = CCS</TD></TR><TR><TD>~M_14 = PRF(PRF(PMS_4,master_secret,(rc_5,a_3)),client_finished,<br/>
+Hash(((TLS12,rc_5,RSA_cipher,extensions),(TLS12,<br/>
+a_3,RSA_cipher,extensions),sign(pk(skS_2),caSKey_1),<br/>
+RSAenc(PMS_4,pk(skS_2)))))</TD></TR><TR><TD>~X_2 = (CCS,PRF(PRF(RSADec(~M_12,~M_11),master_secret,<br/>
+(~M_8,a_3)),server_finished,Hash(((TLS12,~M_8,<br/>
+RSA_cipher,extensions),(TLS12,a_3,RSA_cipher,extensions),<br/>
+~M_5,~M_12))))<br/>
+= (CCS,PRF(PRF(PMS_4,master_secret,<br/>
 (rc_5,a_3)),server_finished,Hash(((TLS12,rc_5,<br/>
-DHE_cipher),(TLS12,a_3,DHE_cipher,group_G),(group_G,<br/>
-g,exp(g,a_4),sign((group_G,g,exp(g,a_4),rc_5,a_3),<br/>
-sskS_2)),exp(g,x_3)))))</TD></TR></TABLE>>]Abbrev -> P__0 [style = invisible, weight =100]}
+RSA_cipher,extensions),(TLS12,a_3,RSA_cipher,extensions),<br/>
+sign(pk(skS_2),caSKey_1),RSAenc(PMS_4,pk(skS_2))))))</TD></TR></TABLE>>]Abbrev -> P__0 [style = invisible, weight =100]}
